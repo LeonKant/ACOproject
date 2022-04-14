@@ -9,19 +9,16 @@
 using namespace std;
 
 class Point {//individual coordinate point
-public:
-    //Point(double num1) { p = num1; };
+public:   
     Point(double num1, double num2) { x = num1; y = num2; };
-    Point(double num1, double num2, bool v) { x = num1; y = num2; visited = v; };
-    double x, y, p = 0;//coordinate point
-    bool visited = 0;//visited or not
-
-    
+    double x, y, p = 0;//coordinate point and probability
+    ~Point() {};
 };
+
 class Edge {//edge between two points containing distance and pheromones
 public:  
     Edge(double d) { dist = d; };
-    Edge(double d, int p) { dist = d; pher = p; };
+    Edge(double d, double p) { dist = d; pher = p; };
     Edge(Point* p1, Point* p2) { findDist(p1, p2); };
     void findDist(Point* p1, Point* p2) {
 
@@ -32,7 +29,7 @@ public:
     ~Edge() {};
 
     double dist = 0;//distance between two points
-    int pher = 0;//pheromone value
+    double pher = 0;//pheromone value
     
 };
 
@@ -52,6 +49,7 @@ public:
     void compGraph(); // create complete graph
     void ACO();// ACO algorithm
     int wrandPoint(vector<int> &P1);
+    void assignProb(int curr, vector<int>& P1);
 
     vector<vector<Edge*>> E;
     vector<Point*> P;
@@ -108,15 +106,41 @@ int CGraph::wrandPoint(vector<int> &P1) {
     return r;
 }
 
-void CGraph::ACO() {
-    int h = 0;
-    while (h < 10) {
-        vector<vector<Edge*>> S;
+void CGraph::assignProb(int curr, vector<int>& P1) {
+    double t, n;
+    double denom = 0;
+    double a = 1;
+    double b = 1;
+    
 
-        for (int i = 0; i < 2; ++i) {//# of ants
+    for (int i = 0; i < P1.size(); ++i) {
+        t = E[curr][P1[i]]->pher;
+        n = 1 / E[curr][P1[i]]->dist;
+        
+        denom = denom + (pow(t,a) * pow(n,b));
+    }
+
+    for (int i = 0; i < P1.size(); ++i) {
+        t = E[curr][P1[i]]->pher;
+        n = 1 / E[curr][P1[i]]->dist;
+
+        P[P1[i]]->p = (pow(t, a) * pow(n,b)) / denom;
+    }
+}
+
+void CGraph::ACO() {
+    int journeys = 0;
+    fstream myFile;
+    myFile.open("points.txt", ios::app);
+    myFile << endl << endl;
+
+    while (journeys < 50) {
+        vector<vector<Edge*>> S;
+        int ants = 5;
+        for (int i = 0; i < ants; ++i) {//# of ants
             vector<Edge*> s;//series of edges; path
             vector<int> P1(P.size());//contains indexes of traversable points
-            int curr = 0; //current city
+            int curr = 0; //current city initialized to 0
 
             for (int l = 0; l < P1.size(); ++l) {//point indexes; N(s)
                 P1[l] = l;
@@ -124,24 +148,24 @@ void CGraph::ACO() {
             for (int j = 0; j < P.size(); ++j) {//while N(s)
                 if (j == 0) {//starts at point 0
                     P1.erase(P1.begin());
-                    cout << curr << " ";
+                    myFile << curr << " ";
                 }
-                else {//if pheromone values are 0, equal chance of choosing path
+                else {
                     double d = P1.size();
                     double p = 1 / d;
                     double newPoint;
 
                     Edge* c = nullptr;
 
-                    if (j != 0 && E[0][1]->pher == 0){//assign probability
+                    if (j != 0 && E[0][1]->pher == 0){//if pheromone values are 0, equal chance of choosing path
                         for (int k = 0; k < P1.size(); ++k) {
                             P[P1[k]]->p = p;
                         }
                     }
-                    else {
-
+                    else {//assign probability
+                        assignProb(curr, P1);
                     }
-
+                    
                     int np = wrandPoint(P1);
                     newPoint = P1[np];
 
@@ -149,29 +173,69 @@ void CGraph::ACO() {
                     s.push_back(c);// Append c to s
 
                     curr = newPoint;
-                    cout << curr << " ";
+                    myFile << curr << " ";
 
                     P1.erase(P1.begin()+np);
                 }
             }
             s.push_back(E[curr][0]);
-            cout << "0" << " " << endl;
+            myFile << "0" << endl;
             S.push_back(s);
             s.clear();
             P1.clear();
         }
+        myFile << endl;
+        // pheromone update
+        vector<double> antPath(ants);
+
+        if (E[0][1]->pher == 0) {//first journey
+            double sum = 0;
+            double avg;
+            for (int i = 0; i < S.size(); ++i) {
+                for (int j = 0; j < S[i].size(); ++j) {
+                    antPath[i] = antPath[i] + S[i][j]->dist;
+                    sum = sum + S[i][j]->dist;
+                }
+                for (int j = 0; j < S[i].size(); ++j) {
+                    double pheromones = S[i][j]->pher + (1 / antPath[i]);
+                    S[i][j]->pher = pheromones;
+                }
+            }
+            
+            avg = sum / double(ants);
+
+            for (int i = 0; i < E.size(); ++i) {//off chance that pheromone is still 0
+                for (int j = 0; j < E[i].size(); ++j) {
+                    if (E[i][j]->pher == 0 && i != j) {
+                        E[i][j]->pher = 1 / avg;
+                    }
+                }
+            }
+        }
+        else {//after first journey
+            for (int i = 0; i < S.size(); ++i) {
+                for (int j = 0; j < S[i].size(); ++j) {
+                    antPath[i] = antPath[i] + S[i][j]->dist;
+                }
+                for (int j = 0; j < S[i].size(); ++j) {
+                    S[i][j]->pher = S[i][j]->pher + (1 / antPath[i]);
+                }
+            }
+        }
+        ++journeys;
     }
+    myFile.close();
 }
 int main(){
 
     int size = 4;
     CGraph G1(size);
     string line, s, x, y;
+    fstream myFile;
 
-    ifstream inFile;
-    inFile.open("points.txt");
+    myFile.open("points.txt");
     int i = 1;
-    while (getline(inFile, line)) {
+    while (getline(myFile, line)) {
         istringstream s(line);
         while (s >> x && s >> y) {
             Point* newPoint = new Point(stoi(x), stoi(y));
@@ -180,23 +244,21 @@ int main(){
         ++i;
     }
     G1.compGraph();
-    inFile.close();
-    for (int i = 0; i < 4; ++i) {
-        cout << G1.P[i]->x << ", " << G1.P[i]->y << endl;
-    }
+    myFile.close();
+    /*for (int i = 0; i < 4; ++i) {
+        std::cout << G1.P[i]->x << ", " << G1.P[i]->y << endl;
+    }*/
 
     G1.ACO();
 
-    int j = 0;
-    for (int i = 0; i < G1.E.size(); ++i) {
-        //int l = i;
-        for (j = i; j < G1.E.size(); ++j) {
-            cout << G1.E[i][j]->dist << "     ";
-            
-        }
-        cout << endl;
-        
-    }
-    /*int r = rand() % 100;
-    cout << r << endl;*/
+    //int j = 0;
+    //for (int i = 0; i < G1.E.size(); ++i) {
+    //    //int l = i;
+    //    for (j = i; j < G1.E.size(); ++j) {
+    //        std::cout << G1.E[i][j]->dist << "     ";
+    //        
+    //    }
+    //    std::cout << endl;
+    //    
+    //}
 }
