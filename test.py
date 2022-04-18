@@ -1,12 +1,6 @@
 # importing the required module
-from itertools import count
-import random
-import time
-from timeit import repeat
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-
-
     
 with open('./points&indexes.txt') as f:
     lines = f.readlines()
@@ -32,84 +26,129 @@ for l in lines:
 
 #GRAPH
 colors = ['green', 'red', 'blue', 'cyan', 'yellow', 'black', 'magenta'];
-def get_Data(indexNumber, pathNumber):
-    graphX=[];
-    graphY=[];
+def get_Data(indexNumber, pathNumber, wayNumber):
+    path = indexes[indexNumber][pathNumber];
+    pathX=[];
+    pathY=[];
+    print("Index Order:", end=" ");
+    print(path);
+    for j in range(wayNumber+1):
+        pathX.append(int(points[path.index(j)][0]));
+        pathY.append(int(points[path.index(j)][1]));
+        if(j==3):
+            pathX.append(int(points[path.index(0)][0]));
+            pathY.append(int(points[path.index(0)][1]));
+    print("--- X: ", end="");
+    print(pathX)
+    print("--- Y: ", end="");
+    print(pathY, end="\n\n")
+    return (pathX, pathY);
+
+def get_FullPathData(indexNumber, pathNumber):
+    path = indexes[indexNumber][pathNumber];
+    pathX=[];
+    pathY=[];
+    print("Index Order:", end=" ");
+    print(path);
+    for j in range(len(points)):
+        pathX.append(int(points[path.index(j)][0]));
+        pathY.append(int(points[path.index(j)][1]));
+        if(j==(len(points)-1)):
+            pathX.append(int(points[path.index(0)][0]));
+            pathY.append(int(points[path.index(0)][1]));
+    print("--- X: ", end="");
+    print(pathX)
+    print("--- Y: ", end="");
+    print(pathY, end="\n\n");
+    return (pathX, pathY);
+    
+
+def get_FullJourneyData(indexNumber):
+    pathX=[];
+    pathY=[];
+    print("Full Graph:")
     for path in indexes[indexNumber]:
-        pathX=[];
-        pathY=[];
-        print("Index Order:", end=" ");
-        print(path);
-        for j in range(pathNumber+1):
+        for j in range(len(points)):
             pathX.append(int(points[path.index(j)][0]));
             pathY.append(int(points[path.index(j)][1]));
-        print("--- X: ", end="");
-        print(pathX)
-        print("--- Y: ", end="");
-        print(pathY)
-        graphX.append(pathX);
-        graphY.append(pathY);
-    print("\n");
-    return (graphX, graphY);
-
+            if(j==(len(points)-1)):
+                pathX.append(int(points[path.index(0)][0]));
+                pathY.append(int(points[path.index(0)][1]));
+    print("--- X: ", end="");
+    print(pathX)
+    print("--- Y: ", end="");
+    print(pathY, end="\n\n")
+    return (pathX, pathY);
 
 print("GRAPH")
 
 countJourney=0;
 countPath=0;
+countWay=0;
 fig = plt.figure("Ant Colony Optimization (ACO)", figsize=(10,7))
 plt.xlim([0, 10])
 plt.ylim([0, 10])
 #creating a subplot 
-ax1 = plt.subplot2grid(shape=(2,6), loc=(0,0), colspan=2)
-ax2 = plt.subplot2grid((2,6), (0,2), colspan=2)
-ax3 = plt.subplot2grid((2,6), (0,4), colspan=2)
-ax4 = plt.subplot2grid((2,6), (1,1), colspan=2)
-ax5 = plt.subplot2grid((2,6), (1,3), colspan=2)
-ax1.title.set_text('Path 1');
-ax2.title.set_text('Path 2');
-ax3.title.set_text('Path 3');
-ax4.title.set_text('Path 4');
-ax5.title.set_text('Path 5');
-
+ax1 = plt.subplot(2,2,1)
+ax2 = plt.subplot(2,2,2)
+ax3 = plt.subplot(2,2,3)
+ax1.title.set_text('Full Journey');
+ax2.title.set_text('Full Path');
+ax3.title.set_text('One by One Path');
+ax1.set_xlim([0, 10])
+ax1.set_ylim([0, 10])
+ax2.set_xlim([0, 10])
+ax2.set_ylim([0, 10])
+ax3.set_xlim([0, 10])
+ax3.set_ylim([0, 10])
+    
 def animate(i):
+    global countPath;
+    global countJourney;
+    global countWay;
     ax1.clear();
     ax2.clear();
     ax3.clear();
-    ax4.clear();
-    ax5.clear();
-    ax1.title.set_text('Path 1');
-    ax2.title.set_text('Path 2');
-    ax3.title.set_text('Path 3');
-    ax4.title.set_text('Path 4');
-    ax5.title.set_text('Path 5');
-    global countPath;
-    global countJourney;
-    if (countPath == 4):
+    ax1.title.set_text('Full Journey '+str(countJourney));
+    ax2.title.set_text('Full Path '+str(countPath));
+    ax3.title.set_text('One by One Path');
+    ax1.set_xlim([0, 10])
+    ax1.set_ylim([0, 10])
+    ax2.set_xlim([0, 10])
+    ax2.set_ylim([0, 10])
+    ax3.set_xlim([0, 10])
+    ax3.set_ylim([0, 10])
+    if (countPath == len(points) and countWay == len(points)):
         countPath = 0;
+        countWay = 0;
         countJourney +=1;
+    elif (countWay == len(points)):
+        countPath+=1;
+        countWay=0;
     print("Journey:", end=" ");
     print(countJourney); 
     print("Points:", end=" ");
     print(points); 
-    print("Path: 0-", end="")  
+    (graphXFull, graphYFull)=get_FullJourneyData(countJourney);
+    print("Path: ", end="")  
     print(countPath);
+    (graphXPath, graphYPath)=get_FullPathData(countJourney, countPath);
     
-    (graphX, graphY)=get_Data(countJourney, countPath);
-    ax1.plot(graphX[0], graphY[0], label = "line 1", color= "blue", linestyle='dashed', linewidth = 2,
+    print("Way: 0-", end="")  
+    print(countWay);
+    (graphX, graphY)=get_Data(countJourney, countPath, countWay);
+    
+    ax1.plot(graphXFull, graphYFull, label = "line 1", color= "blue", linestyle='dashed', linewidth = 2,
             marker='o', markerfacecolor='red', markersize=12) 
-    ax2.plot(graphX[1], graphY[1], label = "line 2", color= "black", linestyle='dashed', linewidth = 2,
+    ax2.plot(graphXPath, graphYPath, label = "line 2", color= "black", linestyle='dashed', linewidth = 2,
             marker='o', markerfacecolor='red', markersize=12) 
-    ax3.plot(graphX[2], graphY[2], label = "line 3", color= "magenta", linestyle='dashed', linewidth = 2,
+    ax3.plot(graphX, graphY, label = "line 3", color= "green", linestyle='dashed', linewidth = 2,
             marker='o', markerfacecolor='red', markersize=12) 
-    ax4.plot(graphX[3], graphY[3], label = "line 4", color= "yellow", linestyle='dashed', linewidth = 2,
-            marker='o', markerfacecolor='red', markersize=12) 
-    ax5.plot(graphX[4], graphY[4], label = "line 5", color= "green", linestyle='dashed', linewidth = 2,
-            marker='o', markerfacecolor='red', markersize=12) 
-    countPath+=1;
+    countWay+=1;
+    print("----------------------------------------------")
     
 
-anim = animation.FuncAnimation(fig, animate, interval=2000)    
+anim = animation.FuncAnimation(fig, animate, interval=500)    
 # giving a title to my graph
 plt.show(); # function to show the plot
 
