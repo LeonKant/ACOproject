@@ -1,28 +1,40 @@
 # importing the required module
+from cgi import print_form
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import os
+
     
-with open('./points&indexes.txt') as f:
+with open('./points&indexes502500.txt') as f:
     lines = f.readlines()
     
 points = [];
-w=5;
-h=5;
-indexes = [[[0 for x in range(w)] for y in range(h)] for z in range (50)]; #create a matrix that contain 50 Journey. In each Journey, there will be a 5x5 matrix in which its row is a Path
+indexes = []; #create a matrix that contain 50 Journey. In each Journey, there will be a 5x5 matrix in which its row is a Path
 countJourney=-1;
 countPath=0;
+maxNumberPath=0;
+max=0;
 for l in lines:
     line = l.split();
+    print(countJourney,countPath)
     if(len(line)>3): #if string has long length, it will be indexes. Therefore, add to indexes array
+        indexes[countJourney].append([]);
         for i in range(len(line)):
             line[i]=int(line[i]);
         indexes[countJourney][countPath]=line;
         countPath+=1;
     elif (len(line)==2): # else if the string has short length and not empty (not ""), it will be the points. Add to points array.
         points.append((line[0], line[1])); #points will be an array and contain the points in tuple. For example: [(10, 10), (1, 3), (1, 2), (5, 2)]
-    elif (len(line)==0 and countJourney<=50):
+        if(int(line[0])>max):
+            max=int(line[0]);
+        if(int(line[1])>max):
+            max=int(line[1]);    
+    elif (len(line)==0):
+        indexes.append([]);        
         countJourney+=1;
+        maxNumberPath=countPath;
         countPath=0;
+        
 
 #GRAPH
 colors = ['green', 'red', 'blue', 'cyan', 'yellow', 'black', 'magenta'];
@@ -86,8 +98,8 @@ countJourney=0;
 countPath=0;
 countWay=0;
 fig = plt.figure("Ant Colony Optimization (ACO)", figsize=(10,7))
-plt.xlim([0, 10])
-plt.ylim([0, 10])
+plt.xlim([0, max])
+plt.ylim([0, max])
 #creating a subplot 
 ax1 = plt.subplot(2,2,1)
 ax2 = plt.subplot(2,2,2)
@@ -95,12 +107,12 @@ ax3 = plt.subplot(2,2,3)
 ax1.title.set_text('Full Journey');
 ax2.title.set_text('Full Path');
 ax3.title.set_text('One by One Path');
-ax1.set_xlim([0, 10])
-ax1.set_ylim([0, 10])
-ax2.set_xlim([0, 10])
-ax2.set_ylim([0, 10])
-ax3.set_xlim([0, 10])
-ax3.set_ylim([0, 10])
+ax1.set_xlim([0, max])
+ax1.set_ylim([0, max])
+ax2.set_xlim([0, max])
+ax2.set_ylim([0, max])
+ax3.set_xlim([0, max])
+ax3.set_ylim([0, max])
     
 def animate(i):
     global countPath;
@@ -112,13 +124,13 @@ def animate(i):
     ax1.title.set_text('Full Journey '+str(countJourney));
     ax2.title.set_text('Full Path '+str(countPath));
     ax3.title.set_text('One by One Path');
-    ax1.set_xlim([0, 10])
-    ax1.set_ylim([0, 10])
-    ax2.set_xlim([0, 10])
-    ax2.set_ylim([0, 10])
-    ax3.set_xlim([0, 10])
-    ax3.set_ylim([0, 10])
-    if (countPath == len(points) and countWay == len(points)):
+    ax1.set_xlim([0, max])
+    ax1.set_ylim([0, max])
+    ax2.set_xlim([0, max])
+    ax2.set_ylim([0, max])
+    ax3.set_xlim([0, max])
+    ax3.set_ylim([0, max])
+    if (countPath == maxNumberPath):
         countPath = 0;
         countWay = 0;
         countJourney +=1;
@@ -138,9 +150,9 @@ def animate(i):
     print(countWay);
     (graphX, graphY)=get_Data(countJourney, countPath, countWay);
     
-    ax1.plot(graphXFull, graphYFull, label = "line 1", color= "blue", linestyle='dashed', linewidth = 2,
+    ax1.plot(graphXFull, graphYFull, label = "line 1", color= "blue", linestyle='dashed', linewidth = 1,
             marker='o', markerfacecolor='red', markersize=12) 
-    ax2.plot(graphXPath, graphYPath, label = "line 2", color= "black", linestyle='dashed', linewidth = 2,
+    ax2.plot(graphXPath, graphYPath, label = "line 2", color= "black", linestyle='dashed', linewidth = 1,
             marker='o', markerfacecolor='red', markersize=12) 
     ax3.plot(graphX, graphY, label = "line 3", color= "green", linestyle='dashed', linewidth = 2,
             marker='o', markerfacecolor='red', markersize=12) 
