@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
     
-with open('./points&indexes25-5000.txt') as f:
+with open('./points&indexes50p-25a-5000j.txt') as f:
     lines = f.readlines()
     
 points = [];
@@ -128,7 +128,7 @@ def animate(i):
     print("-------------------------------------------------------")
     
 
-anim = animation.FuncAnimation(fig, animate, interval=0.5)    
+anim = animation.FuncAnimation(fig, animate, interval=0.1)    
 # giving a title to my graph
 plt.show(); # function to show the plot
 
