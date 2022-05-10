@@ -33,7 +33,7 @@ public:
     
 };
 
-class CGraph {
+class CGraph {//graph of "cities"
 public:
     CGraph() {};
     CGraph(int num) { 
@@ -55,7 +55,7 @@ public:
     vector<Point*> P;
 };
 
-void CGraph::compGraph() {
+void CGraph::compGraph() {// create complete graph
     int j = 0;
     for (int i = 0; i < E.size(); ++i) {
         for (j = i; j < E.size(); ++j) {
@@ -72,7 +72,7 @@ void CGraph::compGraph() {
     }
 }
 
-int CGraph::wrandPoint(vector<int> &P1) {
+int CGraph::wrandPoint(vector<int> &P1) {// determine random point based on probability
     vector<double> CDF;//discrete cumulative density function
     double prev = 0;
     double x;
@@ -93,11 +93,10 @@ int CGraph::wrandPoint(vector<int> &P1) {
 
     while (l < r) {//binary search
         int m = (l + r) / 2;
-   
+
         if (CDF[m] > x) {
             r = m;
-        }
-           
+        }         
         else {
             l = m + 1;
         }          
@@ -106,11 +105,11 @@ int CGraph::wrandPoint(vector<int> &P1) {
     return r;
 }
 
-void CGraph::assignProb(int curr, vector<int>& P1) {
+void CGraph::assignProb(int curr, vector<int>& P1) {//assign probabilities to possible edges
     double t, n;
     double denom = 0;
     double a = 1;
-    double b = 1;
+    double b = 1.5;
     
 
     for (int i = 0; i < P1.size(); ++i) {
@@ -130,14 +129,17 @@ void CGraph::assignProb(int curr, vector<int>& P1) {
 
 void CGraph::ACO() {
     int journeys = 0;
+    vector<Edge*> min;
     fstream myFile;
+    fstream myFile1;
     myFile.open("points.txt", ios::app);
+    myFile1.open("25a2500jb.txt");//file to store avg path length per journey
     myFile << endl << endl;
 
-    while (journeys < 50) {
+    while (journeys < 2500) {//# of journeys
         vector<vector<Edge*>> S;
-        int ants = 5;
-        for (int i = 0; i < ants; ++i) {//# of ants
+        int ants = 25;//# of ants
+        for (int i = 0; i < ants; ++i) {
             vector<Edge*> s;//series of edges; path
             vector<int> P1(P.size());//contains indexes of traversable points
             int curr = 0; //current city initialized to 0
@@ -178,6 +180,7 @@ void CGraph::ACO() {
                     P1.erase(P1.begin()+np);
                 }
             }
+
             s.push_back(E[curr][0]);
             myFile << "0" << endl;
             S.push_back(s);
@@ -185,24 +188,40 @@ void CGraph::ACO() {
             P1.clear();
         }
         myFile << endl;
+        
         // pheromone update
         vector<double> antPath(ants);
+        double minVal = 0;
 
         if (E[0][1]->pher == 0) {//first journey
-            double sum = 0;
+            double sum;
             double avg;
+            double fullSum = 0;
             for (int i = 0; i < S.size(); ++i) {
-                for (int j = 0; j < S[i].size(); ++j) {
+                sum = 0;
+                avg = 0;
+                for (int j = 0; j < S[i].size(); ++j) {//sum of edges in a solution
                     antPath[i] = antPath[i] + S[i][j]->dist;
                     sum = sum + S[i][j]->dist;
                 }
-                for (int j = 0; j < S[i].size(); ++j) {
+                
+                if (minVal == 0) {//determine shortest solution so far
+                    minVal = sum;
+                    min = S[i];
+                }
+                else if (sum < minVal) {
+                    minVal = sum;
+                    min = S[i];
+                }
+
+                for (int j = 0; j < S[i].size(); ++j) {//pheromone distribution
                     double pheromones = S[i][j]->pher + (1 / antPath[i]);
                     S[i][j]->pher = pheromones;
                 }
-            }
-            
-            avg = sum / double(ants);
+                fullSum = fullSum + sum;
+            }          
+            avg = fullSum / double(ants);
+            myFile1 /*<< "min: " << minVal << " avg: "*/ << avg << endl;
 
             for (int i = 0; i < E.size(); ++i) {//off chance that pheromone is still 0
                 for (int j = 0; j < E[i].size(); ++j) {
@@ -213,22 +232,43 @@ void CGraph::ACO() {
             }
         }
         else {//after first journey
+            double sum;
+            double avg;
+            double fullSum = 0;
+
             for (int i = 0; i < S.size(); ++i) {
+                sum = 0;
+                avg = 0;
                 for (int j = 0; j < S[i].size(); ++j) {
                     antPath[i] = antPath[i] + S[i][j]->dist;
+                    sum = sum + S[i][j]->dist;
+                }
+                if (minVal == 0) {//determine shortest solution so far
+                    minVal = sum;
+                    min = S[i];
+                }
+                else if (sum < minVal) {
+                    minVal = sum;
+                    min = S[i];
                 }
                 for (int j = 0; j < S[i].size(); ++j) {
                     S[i][j]->pher = S[i][j]->pher + (1 / antPath[i]);
                 }
+                fullSum = fullSum + sum;
             }
+            avg = fullSum / double(ants);
+            myFile1 << avg << endl;
         }
+        antPath.clear();
         ++journeys;
     }
     myFile.close();
+    myFile1.close();
 }
+
 int main(){
 
-    int size = 4;
+    int size = 50;// # of points in input file
     CGraph G1(size);
     string line, s, x, y;
     fstream myFile;
@@ -245,20 +285,8 @@ int main(){
     }
     G1.compGraph();
     myFile.close();
-    /*for (int i = 0; i < 4; ++i) {
-        std::cout << G1.P[i]->x << ", " << G1.P[i]->y << endl;
-    }*/
 
     G1.ACO();
 
-    //int j = 0;
-    //for (int i = 0; i < G1.E.size(); ++i) {
-    //    //int l = i;
-    //    for (j = i; j < G1.E.size(); ++j) {
-    //        std::cout << G1.E[i][j]->dist << "     ";
-    //        
-    //    }
-    //    std::cout << endl;
-    //    
-    //}
+
 }
