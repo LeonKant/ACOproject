@@ -135,8 +135,8 @@ void CGraph::ACO() {
   vector<Edge*> min;
   fstream myFile;
   fstream myFile1;
-  myFile.open("points.txt", ios::app);
-  myFile1.open("25a2500jb.txt");  // file to store avg path length per journey
+  myFile.open("../points.txt", ios::app);
+  myFile1.open("../25a2500jb.txt");  // file to store avg path length per journey
   myFile << endl << endl;
 
   while (journeys < 2500) {  // # of journeys
@@ -272,7 +272,7 @@ int main() {
   string line, s, x, y;
   fstream myFile;
 
-  myFile.open("points.txt");
+  myFile.open("../points.txt");
   int i = 1;
   while (getline(myFile, line)) {
     istringstream s(line);
