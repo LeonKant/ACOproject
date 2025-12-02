@@ -1,5 +1,6 @@
 .vscode
 *.dSYM
 
-#compiled binary
-ACOproject
+#compiled binaries
+cpp/build
+cpp/_output

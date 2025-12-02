@@ -85,9 +85,9 @@ void CGraph::assignProb(
 void CGraph::ACO() {
   int journeys = 0;
   vector<Edge *> min;
-  ofstream myFile("../ant_paths.txt");
+  ofstream myFile("_output/ant_paths.txt");
   ofstream myFile1(
-      "../25a2500jb.txt"); // file to store avg path length per journey
+      "_output/25a2500jb.txt"); // file to store avg path length per journey
 
   while (journeys < 2500) { // # of journeys
     vector<vector<Edge *>> S;
