@@ -5,13 +5,33 @@
 #include <fstream>
 #include <iostream>
 #include <random>
+#include <sstream>
 #include <vector>
 
-CGraph::CGraph(int num) : E(num, vector<Edge *>(num)) {}
+CGraph::CGraph(string pointsDir) {
+  string line, s, x, y;
+  fstream file;
 
+  file.open(pointsDir);
+
+  if (!file) {
+    throw -1;
+  }
+
+  while (getline(file, line)) {
+    istringstream s(line);
+    while (s >> x && s >> y) {
+      Point *newPoint = new Point(stoi(x), stoi(y));
+      addPoint(newPoint);
+    }
+  }
+  compGraph();
+  file.close();
+}
 void CGraph::addPoint(Point *p) { P.push_back(p); };
 
 void CGraph::compGraph() { // create complete graph
+  E.resize(P.size(), vector<Edge *>(P.size()));
   int j = 0;
   for (int i = 0; i < E.size(); ++i) {
     for (j = i; j < E.size(); ++j) {
@@ -82,16 +102,16 @@ void CGraph::assignProb(
   }
 }
 
-void CGraph::ACO() {
+void CGraph::ACO(int ants, int maxJourneys) {
   int journeys = 0;
   vector<Edge *> min;
+  string avgPathDirName =
+      "_output/" + to_string(ants) + "a" + to_string(maxJourneys) + "jb.txt";
   ofstream myFile("_output/ant_paths.txt");
-  ofstream myFile1(
-      "_output/25a2500jb.txt"); // file to store avg path length per journey
+  ofstream myFile1(avgPathDirName); // file to store avg path length per journey
 
-  while (journeys < 2500) { // # of journeys
+  while (journeys < maxJourneys) { // # of journeys
     vector<vector<Edge *>> S;
-    int ants = 25; // # of ants
     for (int i = 0; i < ants; ++i) {
       vector<Edge *> s;         // series of edges; path
       vector<int> P1(P.size()); // contains indexes of traversable points
