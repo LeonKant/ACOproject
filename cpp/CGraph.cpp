@@ -7,14 +7,7 @@
 #include <random>
 #include <vector>
 
-CGraph::CGraph(int num) {
-  E.resize(num);
-  vector<Edge *> e(E.size());
-
-  for (int i = 0; i < E.size(); ++i) {
-    E[i] = e;
-  }
-}
+CGraph::CGraph(int num) : E(num, vector<Edge *>(num)) {}
 
 void CGraph::addPoint(Point *p) { P.push_back(p); };
 
